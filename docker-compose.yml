@@ -35,9 +35,11 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
-    # concurrency specifies number of workers
+    deploy:
+      replicas: 1
+    # concurrency specifies number of worker
     # purge deletes the broker queue every time it starts up
-    command: celery -A main.celery_app worker --loglevel=INFO --purge
+    command: celery -A main.celery_app worker --loglevel=INFO --purge --concurrency=1
     volumes:
       - ./app:/opt/
     depends_on:

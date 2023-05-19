@@ -15,7 +15,7 @@ docker-compose up
 o
 
 ```
-docker compose up --build --scale celery_worker=8
+docker compose up --build
 ```
 
 ## Celery 
