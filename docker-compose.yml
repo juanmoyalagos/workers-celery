@@ -1,0 +1,90 @@
+#./workers-fastAPI/docker-compose.yml
+version: '3.7'
+
+services:
+
+  nginx:
+    build: ./nginx
+    ports: 
+      - 80:80
+      - 81:81
+      - 82:82
+    depends_on:
+      - app
+
+  redis:
+    image: redis:7
+    volumes:
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+
+  app:
+    build:
+        context: ./app
+        dockerfile: Dockerfile
+    command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+    volumes:
+      - ./app:/opt/
+    expose:
+      - 8000
+    env_file:
+      - ./.env
+    depends_on:
+      - redis
+
+  celery_worker:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    # concurrency specifies number of workers
+    # purge deletes the broker queue every time it starts up
+    command: celery -A main.celery_app worker --loglevel=INFO --purge
+    volumes:
+      - ./app:/opt/
+    depends_on:
+      - app
+    env_file:
+      - ./.env
+
+  # celery_beat:
+  #   build:
+  #     context: ./app
+  #     dockerfile: Dockerfile
+  #   command: celery -A main.celery_app beat --loglevel=INFO
+  #   volumes:
+  #     - ./app:/opt/
+  #   depends_on:
+  #     - app
+  #   env_file:
+  #     - ./.env
+
+  flower:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    command: bash -c "sleep 10; celery -A main.celery_app flower --loglevel=INFO;"
+    expose:
+      - 5555
+    volumes:
+      - ./app:/opt/
+    depends_on:
+      - celery_worker
+      # - celery_beat
+    env_file:
+      - ./.env
+
+  locust-master:
+    image: locustio/locust
+    expose:
+     -  8089
+    volumes:
+      - ./load_test:/mnt/locust
+    command: -f /mnt/locust/locust.py --master -H http://locust-master:8089
+  
+  locust-worker:
+    image: locustio/locust
+    volumes:
+      - ./load_test:/mnt/locust
+    command: -f /mnt/locust/locust.py --worker --master-host locust-master
+
+volumes:
+  postgres_data:
