@@ -11,6 +11,7 @@ services:
       - 82:82 # Load test locust
     depends_on:
       - app
+      - flower
 
   redis:
     # https://redis.com/solutions/use-cases/messaging/
@@ -27,6 +28,8 @@ services:
       - ./app:/opt/
     expose:
       - 8000
+    ports:
+      - 8000:8000
     env_file:
       - ./.env
     depends_on:
@@ -38,7 +41,7 @@ services:
       dockerfile: Dockerfile
     deploy:
       # replicas scales containers
-      replicas: 1
+      replicas: 3
     # concurrency specifies number of worker
     # purge deletes the broker queue every time it starts up
     command: celery -A main.celery_app worker --loglevel=INFO --purge --concurrency=1
@@ -68,6 +71,8 @@ services:
     command: bash -c "sleep 10; celery -A main.celery_app flower --loglevel=INFO;"
     expose:
       - 5555
+    ports:
+      - 5555:5555
     volumes:
       - ./app:/opt/
     depends_on:
@@ -76,14 +81,18 @@ services:
     env_file:
       - ./.env
 
+  # This is only for load testing, not revelant for the project itself
   locust-master:
     image: locustio/locust
     expose:
      -  8089
+    ports:
+     - 8089:8089
     volumes:
       - ./load_test:/mnt/locust
     command: -f /mnt/locust/locust.py --master -H http://locust-master:8089
   
+  # This is only for load testing, not revelant for the project itself
   locust-worker:
     image: locustio/locust
     volumes:
