@@ -1,7 +1,7 @@
 from locust import HttpUser, task
 from random import randint,seed
 seed(1)
-class HelloWorldUser(HttpUser):
+class SumLoadTest(HttpUser):
     @task
-    def hello_world(self):
-        self.client.post("http://app:8000/job", json={"number": randint(1, 10000000)})
+    def sum_load_test(self):
+        self.client.post("http://app:8000/sum", json={"number": randint(1000000, 50000000)})

@@ -1,6 +1,3 @@
-#./workers-fastAPI/docker-compose.yml
-version: '3.7'
-
 services:
 
   nginx:
@@ -30,8 +27,9 @@ services:
       - 8000
     ports:
       - 8000:8000
-    env_file:
-      - ./.env
+    environment:
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
     depends_on:
       - redis
 
@@ -41,34 +39,36 @@ services:
       dockerfile: Dockerfile
     deploy:
       # replicas scales containers
-      replicas: 3
+      replicas: 1
     # concurrency specifies number of worker
     # purge deletes the broker queue every time it starts up
-    command: celery -A main.celery_app worker --loglevel=INFO --purge --concurrency=1
+    command: celery -A worker.celery_app worker --loglevel=INFO --purge --concurrency=1
     volumes:
       - ./app:/opt/
     depends_on:
       - app
-    env_file:
-      - ./.env
+    environment:
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
 
   # celery_beat:
   #   build:
   #     context: ./app
   #     dockerfile: Dockerfile
-  #   command: celery -A main.celery_app beat --loglevel=INFO
+  #   command: celery -A worker.celery_app beat --loglevel=INFO
   #   volumes:
   #     - ./app:/opt/
   #   depends_on:
   #     - app
-  #   env_file:
-  #     - ./.env
+  #   environment:
+  #     CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+  #     CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
 
   flower:
     build:
       context: ./app
       dockerfile: Dockerfile
-    command: bash -c "sleep 10; celery -A main.celery_app flower --loglevel=INFO;"
+    command: bash -c "sleep 10; celery -A worker.celery_app flower --loglevel=INFO;"
     expose:
       - 5555
     ports:
@@ -78,8 +78,9 @@ services:
     depends_on:
       - celery_worker
       # - celery_beat
-    env_file:
-      - ./.env
+    environment:
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
 
   # This is only for load testing, not revelant for the project itself
   locust-master:
