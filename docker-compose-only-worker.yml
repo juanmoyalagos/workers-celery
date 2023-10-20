@@ -1,3 +1,5 @@
+# This docker compose is only inteded to be used in the assistanship class
+# It is not useful for the project.
 services:
 
   celery_worker_alone:

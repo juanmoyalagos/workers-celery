@@ -3,26 +3,25 @@ services:
   nginx:
     build: ./nginx
     ports: 
-      - 80:80 # API celery master
-      - 81:81 # Monitoring celery flower
-      - 82:82 # Load test locust
+      - 80:80 # Configure HTTP port
     depends_on:
-      - app
-      - flower
+      - producer
+      - dashboard
+      - load-test-master
 
-  redis:
+  redis-broker:
     # https://redis.com/solutions/use-cases/messaging/
     image: redis:7
     volumes:
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
 
-  app:
+  producer:
     build:
-        context: ./app
+        context: ./project
         dockerfile: Dockerfile
-    command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+    command: uvicorn producer:app --reload --host 0.0.0.0 --port 8000
     volumes:
-      - ./app:/opt/
+      - ./project:/opt/
     expose:
       - 8000
     ports:
@@ -31,59 +30,46 @@ services:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
     depends_on:
-      - redis
+      - redis-broker
 
-  celery_worker:
+  consumer:
     build:
-      context: ./app
+      context: ./project
       dockerfile: Dockerfile
     deploy:
       # replicas scales containers
       replicas: 1
     # concurrency specifies number of worker
     # purge deletes the broker queue every time it starts up
-    command: celery -A worker.celery_app worker --loglevel=INFO --purge --concurrency=1
+    command: celery -A consumer.celery_app worker --loglevel=INFO --purge --concurrency=1
     volumes:
-      - ./app:/opt/
+      - ./project:/opt/
     depends_on:
-      - app
+      - producer
     environment:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
 
-  # celery_beat:
-  #   build:
-  #     context: ./app
-  #     dockerfile: Dockerfile
-  #   command: celery -A worker.celery_app beat --loglevel=INFO
-  #   volumes:
-  #     - ./app:/opt/
-  #   depends_on:
-  #     - app
-  #   environment:
-  #     CELERY_BROKER_URL: ${CELERY_BROKER_URL}
-  #     CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
-
-  flower:
+  dashboard:
     build:
-      context: ./app
+      context: ./project
       dockerfile: Dockerfile
-    command: bash -c "sleep 10; celery -A worker.celery_app flower --loglevel=INFO;"
+    command: bash -c "sleep 10; celery -A consumer.celery_app flower --loglevel=INFO --url_prefix=dashboard;"
     expose:
       - 5555
     ports:
       - 5555:5555
     volumes:
-      - ./app:/opt/
+      - ./project:/opt/
     depends_on:
-      - celery_worker
+      - consumer
       # - celery_beat
     environment:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
 
   # This is only for load testing, not revelant for the project itself
-  locust-master:
+  load-test-master:
     image: locustio/locust
     expose:
      -  8089
@@ -91,14 +77,27 @@ services:
      - 8089:8089
     volumes:
       - ./load_test:/mnt/locust
-    command: -f /mnt/locust/locust.py --master -H http://locust-master:8089
+    command: -f /mnt/locust/locust.py --master -H http://load-test-master:8089
   
   # This is only for load testing, not revelant for the project itself
-  locust-worker:
+  load-test-worker:
     image: locustio/locust
     volumes:
       - ./load_test:/mnt/locust
-    command: -f /mnt/locust/locust.py --worker --master-host locust-master
+    command: -f /mnt/locust/locust.py --worker --master-host load-test-master
+
+  # celery_beat:
+  #   build:
+  #     context: ./project
+  #     dockerfile: Dockerfile
+  #   command: celery -A consumer.celery_app beat --loglevel=INFO
+  #   volumes:
+  #     - ./project:/opt/
+  #   depends_on:
+  #     - producer
+  #   environment:
+  #     CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+  #     CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
 
 volumes:
   postgres_data:
