@@ -11,7 +11,7 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"message": "Hello World, this is a route from the producer or job master"}
 
 # https://docs.celeryq.dev/en/stable/getting-started/first-steps-with-celery.html
 @app.get("/wait_and_return")

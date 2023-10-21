@@ -11,17 +11,9 @@ timezone = 'America/Santiago'
 imports = ('celery_config.tasks', )
 # beat scheduler
 CELERY_BEAT_SCHEDULE = {
-    'every-4-minutes_kenobi': {
-        'task': 'celery_config.tasks.kenobi',
-        'schedule': crontab(minute='*/4')  # execute every 4 minutes
-    },
     'every-1-minutes_add': {
         'task': 'celery_config.tasks.add',
         'schedule': crontab(minute='*/1'), # every 1 minute
         'args': (16, 16),
-    },
-    'every-4-minutes_grievous': {
-        'task': 'celery_config.tasks.grievous',
-        'schedule': crontab(minute='*/4') # execute every 4 minutes
     },
 }
