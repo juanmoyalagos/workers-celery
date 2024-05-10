@@ -3,16 +3,6 @@ version: '3.7'
 
 services:
 
-  nginx:
-    build: ./nginx
-    ports: 
-      - 80:80 # API celery master
-      - 81:81 # Monitoring celery flower
-      - 82:82 # Load test locust
-    depends_on:
-      - app
-      - flower
-
   redis:
     # https://redis.com/solutions/use-cases/messaging/
     image: redis:7
@@ -80,24 +70,6 @@ services:
       # - celery_beat
     env_file:
       - ./.env
-
-  # This is only for load testing, not revelant for the project itself
-  locust-master:
-    image: locustio/locust
-    expose:
-     -  8089
-    ports:
-     - 8089:8089
-    volumes:
-      - ./load_test:/mnt/locust
-    command: -f /mnt/locust/locust.py --master -H http://locust-master:8089
-  
-  # This is only for load testing, not revelant for the project itself
-  locust-worker:
-    image: locustio/locust
-    volumes:
-      - ./load_test:/mnt/locust
-    command: -f /mnt/locust/locust.py --worker --master-host locust-master
 
 volumes:
   postgres_data:
