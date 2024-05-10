@@ -1,5 +1,5 @@
 # ./django-docker/app/Dockerfile
-FROM python:3.11.1
+FROM python:3.11
 
 # set work directory
 WORKDIR /opt/
