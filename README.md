@@ -30,6 +30,8 @@ Then the project exposes multiple endpoints, all of them available in port 80 (H
 - `/producer/api/wait_and_return/{job_id}`: Queries the celery backend (Redis DB) for the results of the job with id 'job_id' for the method 'wait_and_return'.
 - `/producer/api/sum`: A producer or job master route which queues a job in the broker for the method 'sum_to_n_job' defined in "/project/celery_config/tasks.py"
 - `/producer/api/sum/{job_id}`: Queries the celery backend (Redis DB) for the results of the job with id 'job_id' for the method 'sum_to_n_job'.
+- `/producer/api/stock-estimate`: Queues a job to estimate future stock value and potential earnings based on current price, last month's price, and number of shares.
+- `/producer/api/stock-estimate/{job_id}`: Queries the results of the stock value estimation job with the given job_id.
 
 **Dashboard endpoint**
 - `/dashboard`: Using 'flower' a dashboard is deployed to visualize the consumers or workers and the broker.
