@@ -5,23 +5,27 @@ services:
     image: redis:7
     volumes:
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - backend_grupo24_app-network
 
   producer:
     build:
         context: ./project
         dockerfile: Dockerfile
-    command: uvicorn producer:app --reload --host 0.0.0.0 --port 8000
+    command: uvicorn producer:app --reload --host 0.0.0.0 --port 8001
     volumes:
       - ./project:/opt/
     expose:
-      - 8000
+      - 8001
     ports:
-      - '8000:8000'
+      - '8001:8001'
     environment:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
     depends_on:
       - redis-broker
+    networks:
+      - backend_grupo24_app-network
 
   consumer:
     build:
@@ -40,6 +44,8 @@ services:
     environment:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+    networks:
+      - backend_grupo24_app-network
 
   dashboard:
     build:
@@ -58,6 +64,8 @@ services:
     environment:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+    networks:
+      - backend_grupo24_app-network
 
   # celery_beat:
   #   build:
@@ -74,3 +82,7 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  backend_grupo24_app-network:
+    external: true  # Esta es la clave: indica que la red ya existe

@@ -6,4 +6,5 @@ class Number(BaseModel):
 class StockEstimation(BaseModel):
     current_price: float
     last_month_price: float
+    day_difference: float
     shares_count: int

@@ -56,6 +56,7 @@ def post_stock_estimate(stock_data: StockEstimation):
     job = estimate_stock_value.delay(
         stock_data.current_price, 
         stock_data.last_month_price,
+        stock_data.day_difference,
         stock_data.shares_count
     )
     return {

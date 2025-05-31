@@ -24,21 +24,22 @@ def sum_to_n_job(number):
     return result
 
 @shared_task
-def estimate_stock_value(current_price, last_month_price, shares_count):
+def estimate_stock_value(current_price, last_month_price, day_difference, shares_count):
     """
     Realiza una estimación lineal del precio futuro de una acción y calcula las ganancias esperadas
     
     Parameters:
     - current_price: float - Precio actual de la acción
     - last_month_price: float - Precio de la acción hace un mes
+    - day_difference: int - Diferencia de días entre las fechas
     - shares_count: int - Número de acciones que posee el usuario
-    
+
     Returns:
     - dict - Diccionario con los resultados (precio estimado y ganancias esperadas)
     """
     # Calcular la tasa de cambio mensual
-    monthly_change_rate = current_price - last_month_price
-    
+    monthly_change_rate = (current_price - last_month_price) / day_difference if day_difference else 0
+
     # Estimar el precio para el próximo mes mediante proyección lineal
     estimated_price = current_price + monthly_change_rate
     
