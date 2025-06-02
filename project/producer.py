@@ -2,12 +2,22 @@ import os
 
 # FastAPI
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware  # Importamos el middleware CORS
 
 # celery
 from celery_config.tasks import wait_and_return, sum_to_n_job, estimate_stock_value
 from models import Number, StockEstimation
 
 app = FastAPI()
+
+# Configuración de CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite todas las orígenes
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos los métodos
+    allow_headers=["*"],  # Permite todos los headers
+)
 
 @app.get("/")
 def read_root():
