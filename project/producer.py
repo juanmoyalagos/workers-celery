@@ -23,7 +23,7 @@ app.add_middleware(
 def read_root():
     return {"message": "Hello World, this is a route from the producer or job master"}
 
-@app.get("/heartbeat")
+@app.get("/workers/heartbeat")
 def heartbeat():
     """
     Endpoint para verificar si el servicio está disponible
