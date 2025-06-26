@@ -6,7 +6,7 @@ services:
     volumes:
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
     networks:
-      - arquisis
+      - backend_grupo24_app-network
 
   producer:
     build:
@@ -25,7 +25,7 @@ services:
     depends_on:
       - redis-broker
     networks:
-      - arquisis
+      - backend_grupo24_app-network
 
   consumer:
     build:
@@ -45,7 +45,7 @@ services:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
     networks:
-      - arquisis
+      - backend_grupo24_app-network
 
   dashboard:
     build:
@@ -65,7 +65,7 @@ services:
       CELERY_BROKER_URL: ${CELERY_BROKER_URL}
       CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
     networks:
-      - arquisis
+      - backend_grupo24_app-network
 
   # celery_beat:
   #   build:
@@ -84,5 +84,5 @@ volumes:
   postgres_data:
 
 networks:
-  arquisis:
-    external: true  # Esta es la clave: indica que la red ya existe
+  backend_grupo24_app-network:
+    external: true  # Usar la red existente del backend
